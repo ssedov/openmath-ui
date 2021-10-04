@@ -23,7 +23,7 @@ export default class Test extends React.Component<TestId, TestData> {
         submission_id: ''
     };
 
-    answers: any = {};
+    private answers: any = {};
     private dataLoaded = false;
 
     public getQuestionData(questionId: string): QuestionState {
@@ -45,7 +45,7 @@ export default class Test extends React.Component<TestId, TestData> {
         this.loadData();
     }
 
-    public loadData() {
+    private loadData() {
         if (this.dataLoaded)
             return;
         if (!Config.API)
@@ -116,10 +116,10 @@ export default class Test extends React.Component<TestId, TestData> {
         return (
             <div className='testWrapper'>
                 <h3 className='testTitle'>{title}</h3>
-                <form onSubmit={this.submitForm}>
+                <form onSubmit={() => {this.submitForm();}}>
                     <ol>{listItems}</ol>
                     <div className='submit'>
-                        <input type='button' value='Отправить' onClick={this.submitForm}/>
+                        <input type='button' value='Отправить' onClick={() => {this.submitForm();}}/>
                     </div>
                 </form>
             </div>);
