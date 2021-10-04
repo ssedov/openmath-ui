@@ -1,0 +1,13 @@
+textarea.text {
+    min-width: 50%;
+    height: 60pt;
+}
+
+input.free {
+    min-width: 50%;
+}
+
+.submit {
+    margin: auto;
+    alignment: center;
+}
