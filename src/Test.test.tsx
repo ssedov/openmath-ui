@@ -1,6 +1,7 @@
 import React from 'react';
 import {render, screen} from '@testing-library/react';
-import Test, {Config} from './Test';
+import Test from './Test';
+import Config from "./Config";
 
 const FAKE_TESTS: any = {
     'basic_test': {

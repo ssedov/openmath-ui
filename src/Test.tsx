@@ -1,10 +1,7 @@
 import React from "react";
 import axios from "axios";
 import Question, {QuestionState} from "./Question";
-
-export class Config {
-    static API?: string = '/api';
-}
+import Config from "./Config";
 
 type TestId = {
     test_id: string,
@@ -101,7 +98,6 @@ export default class Test extends React.Component<TestId, TestData> {
             value = (typeof value === 'string' ? value : '');
             this.answers[questionId] = value;
         }
-        // console.log(this.answers);
     }
 
     public render() {
@@ -118,8 +114,8 @@ export default class Test extends React.Component<TestId, TestData> {
         });
         const title = this.state.title || 'Loading...';
         return (
-            <div>
-                <h3>{title}</h3>
+            <div className='testWrapper'>
+                <h3 className='testTitle'>{title}</h3>
                 <form onSubmit={this.submitForm}>
                     <ol>{listItems}</ol>
                     <div className='submit'>
