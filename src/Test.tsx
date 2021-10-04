@@ -2,8 +2,13 @@ import React from "react";
 import axios from "axios";
 import Question, {QuestionState} from "./Question";
 
+export class Config {
+    static API?: string = '/api';
+}
+
 type TestId = {
     test_id: string,
+    data?: TestData,
 }
 
 type TestData = {
@@ -21,7 +26,6 @@ export default class Test extends React.Component<TestId, TestData> {
         submission_id: ''
     };
 
-    // answers = new Map<string, number|Set<number>|string>();
     answers: any = {};
     private dataLoaded = false;
 
@@ -32,19 +36,30 @@ export default class Test extends React.Component<TestId, TestData> {
         throw Error('question not found');
     }
 
+    public constructor(id: TestId) {
+        super(id);
+        if (id.data) {
+            this.state = id.data;
+            this.dataLoaded = true;
+        }
+    }
+
     public componentDidMount() {
         this.loadData();
     }
 
     public loadData() {
-        axios.get('/api/test/' + this.props.test_id).then(
+        if (this.dataLoaded)
+            return;
+        if (!Config.API)
+            return;
+        axios.get(`${Config.API}/test/${this.props.test_id}`).then(
             (req) => {
                 this.dataLoaded = true;
                 const newQuestions = new Map<string, any>();
                 for (let q_id in req.data.questions) {
                     const qq = req.data.questions[q_id];
                     const qid: string = qq.question_id;
-                    console.log(qq);
                     newQuestions.set(qid, qq);
                 }
                 let title = req.data.title;
@@ -105,10 +120,10 @@ export default class Test extends React.Component<TestId, TestData> {
         return (
             <div>
                 <h3>{title}</h3>
-                <form onSubmit={e=> this.submitForm()}>
+                <form onSubmit={this.submitForm}>
                     <ol>{listItems}</ol>
                     <div className='submit'>
-                        <input type='button' value='Отправить' onClick={e => this.submitForm()}/>
+                        <input type='button' value='Отправить' onClick={this.submitForm}/>
                     </div>
                 </form>
             </div>);
