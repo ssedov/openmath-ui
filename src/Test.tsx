@@ -112,15 +112,16 @@ export default class Test extends React.Component<TestId, TestData> {
         this.state.questions.forEach((question, question_id) => {
             listItems.push(<li key={question_id}><Question question_id={question_id} parent={this}/></li>);
         });
-        const title = this.state.title || 'Loading...';
+        const title = this.state.title || 'Загрузка...';
         return (
             <div className='testWrapper'>
-                <h3 className='testTitle'>{title}</h3>
+                <div className='testTitle'><h2 className='testTitle'>{title}</h2></div>
                 <form onSubmit={() => {this.submitForm();}}>
                     <ol>{listItems}</ol>
+                    { this.dataLoaded && (
                     <div className='submit'>
-                        <input type='button' value='Отправить' onClick={() => {this.submitForm();}}/>
-                    </div>
+                        <input type='button' className='submitTest' value='Отправить' onClick={() => {this.submitForm();}}/>
+                    </div> ) }
                 </form>
             </div>);
     }
