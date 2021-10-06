@@ -9,20 +9,6 @@ type MarkupPiece = {
     value: string,
 }
 
-export class MarkupElement extends React.Component<MarkupPiece, any> {
-    render() {
-        if (this.props.type === 'plain')
-            return this.props.value;
-        if (this.props.type === 'itex')
-            return (
-                <MathJaxContext>
-                    <MathJax>{this.props.value}</MathJax>
-                </MathJaxContext>
-            )
-        //     return <span style={{margin: '3px'}}><MathComponent display={false} tex={this.props.value}/></span>
-    }
-}
-
 export type QuestionState = {
     selection: string | number | null
     text: string | MarkupPiece[],
