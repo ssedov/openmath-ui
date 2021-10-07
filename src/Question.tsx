@@ -20,7 +20,8 @@ export type QuestionState = {
 
 type QuestionData = {
     question_id: string,
-    parent: Test;
+    parent: Test,
+    marker?: string,
 };
 
 export default class Question extends React.Component<QuestionData, QuestionState> {
@@ -107,6 +108,7 @@ export default class Question extends React.Component<QuestionData, QuestionStat
             );
         return (<MathJaxContext>
                 <div className={image ? "questionContainerImg" : "questionContainer"}>
+                    <div className={'questionMarker'}>{this.props.marker}.</div>
                     {image}
                     <div className='questionText'><p>{this.renderText(this.state.text)}</p></div>
                     <div>{answerBlock}</div>

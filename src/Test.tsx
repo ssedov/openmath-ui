@@ -138,8 +138,10 @@ export default class Test extends React.Component<TestId, TestData> {
 
         }
         const listItems: any = [];
+        let questionNum = 0;
         this.state.questions.forEach((question, question_id) => {
-            listItems.push(<li key={question_id}><Question question_id={question_id} parent={this}/></li>);
+            questionNum++;
+            listItems.push(<Question question_id={question_id} marker={questionNum.toString()} parent={this}/>);
         });
         const title = this.state.title || 'Загрузка...';
         return (
