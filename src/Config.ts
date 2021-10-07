@@ -1,4 +1,7 @@
 export default class Config {
-    static API?: string = '/api';
+    public static _API?: string;
+    public static API(): string {
+        return process.env.REACT_APP_API || Config._API || '/api';
+    }
 }
 

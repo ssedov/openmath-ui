@@ -2,6 +2,7 @@ import React from "react";
 import axios from "axios";
 import Question, {QuestionState} from "./Question";
 import Config from "./Config";
+import './Test.css';
 
 type TestId = {
     test_id: string,
@@ -10,21 +11,20 @@ type TestId = {
 
 type TestData = {
     questions: Map<string, QuestionState>,
-    title: string | null,
-    status: string,
-    submission_id: string,
+    title?: string,
+    status?: string,
+    submission_id?: string,
+    uploads?: number,
 }
 
 export default class Test extends React.Component<TestId, TestData> {
     state: TestData = {
         questions: new Map<string, any>(),
-        title: null,
-        status: '',
-        submission_id: ''
     };
 
     private answers: any = {};
     private dataLoaded = false;
+    private uploads = 0;
 
     public getQuestionData(questionId: string): QuestionState {
         const qs = this.state.questions.get(questionId);
@@ -48,9 +48,9 @@ export default class Test extends React.Component<TestId, TestData> {
     private loadData() {
         if (this.dataLoaded)
             return;
-        if (!Config.API)
+        if (!Config.API() || Config.API() === 'foo')
             return;
-        axios.get(`${Config.API}/test/${this.props.test_id}`).then(
+        axios.get(`${Config.API()}/test/${this.props.test_id}`).then(
             (req) => {
                 this.dataLoaded = true;
                 const newQuestions = new Map<string, any>();
@@ -69,44 +69,73 @@ export default class Test extends React.Component<TestId, TestData> {
         //ToDo: validations
         console.log('Submit');
         console.log(this.answers);
-        const form = new FormData();
-        form.set('foo', 'bar');
-        axios.post('/api/submit/' + this.props.test_id, this.answers).then(
-            r => {
-                if (r.status === 200 && r.data.status === 'success') {
-                    const state = this.state;
-                    state.status = r.data.status;
-                    state.submission_id = r.data.submission_id || 'N/A';
-                    this.setState(state);
-                }
-            }
-        );
+
+        axios.get(`${Config.API()}/submit`).then(
+            resp => {
+                this.answers.submission_id = resp.data.submission_id;
+                const config = {headers: {SubmissionId: resp.data.submission_id}};
+                this.state.questions.forEach((q, key) => {
+                    const form = new FormData();
+                    if (q.type === 'file' && this.answers[key]) {
+                        this.uploads += 1;
+                        form.append(key, this.answers[key][0]);
+                        axios.put(`${Config.API()}/upload`, form, config).then(
+                            resp => {
+                                this.uploads -= resp.status === 200 ? 1 : 0;
+                                this.setState(state => state);
+                            }
+                        );
+                    }
+                });
+
+
+                axios.post(`${Config.API()}/submit/${this.props.test_id}`, this.answers, config).then(
+                    r => {
+                        if (r.status === 200 && r.data.status === 'success') {
+                            const state = this.state;
+                            state.status = r.data.status;
+                            state.submission_id = r.data.submission_id || 'N/A';
+                            this.setState(state);
+                        }
+                    }
+                );
+            })
     }
 
-    public handleAnswer(questionId: string, answerNumber: number, value: boolean | string): void {
+    public handleAnswer(questionId: string, answerNumber: number, value: boolean | string | FileList): void {
         const q = this.state.questions.get(questionId);
         if (!q)
             throw Error('Question not found')
 
         if (q.type === 'single')
             this.answers[questionId] = answerNumber;
-        if (q.type === 'multi') {
+        else if (q.type === 'multi') {
             this.answers[questionId] = this.answers[questionId] || {};
             this.answers[questionId][answerNumber.toString()] = !value;
         }
-        if (q.type === 'free' || q.type === 'text') {
+        else if (q.type === 'free' || q.type === 'text') {
             value = (typeof value === 'string' ? value : '');
             this.answers[questionId] = value;
         }
+        else if (q.type === 'file') {
+            this.answers[questionId] = value;
+        }
+        console.log(this.answers);
     }
 
     public render() {
         if (this.state.status === 'success') {
-            return (
+            if (this.uploads === 0) return (
                 <div><h3>Ваши результаты приняты, спасибо за отправку.</h3>
                     <p>Идентификатор отправки: {this.state.submission_id}</p>
                 </div>
             );
+            return (
+                <div><h3>Ваши результаты приняты, идёт загрузка файлов ({this.uploads}).</h3>
+                    <p>Идентификатор отправки: {this.state.submission_id}</p>
+                </div>
+            );
+
         }
         const listItems: any = [];
         this.state.questions.forEach((question, question_id) => {

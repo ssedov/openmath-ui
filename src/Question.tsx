@@ -2,7 +2,8 @@ import {MathJax} from "better-react-mathjax";
 import MathJaxContext from "better-react-mathjax/MathJaxContext";
 import React from "react";
 import Test from "./Test";
-import './question.css';
+import './Question.css';
+import Config from "./Config";
 
 type MarkupPiece = {
     type: 'plain' | 'itex' | 'tex',
@@ -12,7 +13,7 @@ type MarkupPiece = {
 export type QuestionState = {
     selection: string | number | null
     text: string | MarkupPiece[],
-    image: string | null,
+    image?: string,
     answers: string[] | MarkupPiece[][] | undefined,
     type: 'free' | 'single' | 'multi' | 'file' | 'text' | undefined
 }
@@ -26,7 +27,6 @@ export default class Question extends React.Component<QuestionData, QuestionStat
 
     state: QuestionState = {
         text: '',
-        image: null,
         answers: [],
         selection: null,
         type: undefined,
@@ -58,7 +58,7 @@ export default class Question extends React.Component<QuestionData, QuestionStat
                 </div>
             </div>);
         }
-        if (this.state.type === 'free') {
+        else if (this.state.type === 'free') {
             const t = this.state.type || ''; // TS linting
             answerBlock = (<div className='answerBlock'>
                 <div>
@@ -72,7 +72,7 @@ export default class Question extends React.Component<QuestionData, QuestionStat
                 </div>
             </div>);
         }
-        if (this.state.type === 'text') {
+        else if (this.state.type === 'text') {
             const t = this.state.type || ''; // TS linting
             answerBlock = (<div className='answerBlock'>
                 <div>
@@ -86,9 +86,29 @@ export default class Question extends React.Component<QuestionData, QuestionStat
                 </div>
             </div>);
         }
+        else if (this.state.type === 'file') {
+            const t = this.state.type || ''; // TS linting
+            answerBlock = (<div className='answerBlock'>
+                <div>
+                    <div>
+                        <input type='file' className={t} name={this.props.question_id}
+                               id={this.props.question_id + 'i'}
+                               onInput={(e) =>
+                                   this.props.parent.handleAnswer(e.currentTarget.name, 0, e.currentTarget.files || '')}
+                        />
+                    </div>
+                </div>
+            </div>);
+        }
+        let image: JSX.Element | undefined;
+        if (this.state.image)
+            image = (
+                <img className='questionImage' src={`${Config.API()}/image/${this.state.image}`} alt={this.props.question_id}/>
+            );
         return (<MathJaxContext>
-                <div className="questionContainer">
-                    <p>{this.renderText(this.state.text)}</p>
+                <div className={image ? "questionContainerImg" : "questionContainer"}>
+                    {image}
+                    <div className='questionText'><p>{this.renderText(this.state.text)}</p></div>
                     <div>{answerBlock}</div>
                 </div>
             </MathJaxContext>

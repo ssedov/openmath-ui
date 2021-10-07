@@ -11,7 +11,7 @@ const FAKE_TESTS: any = {
 }
 
 test('loading displayed', () => {
-    Config.API = undefined;
+    Config._API = 'foo';
     render(<Test test_id='test_test' />);
     const element = screen.getByText(/Loading/i);
     expect(element).toBeInTheDocument();
