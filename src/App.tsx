@@ -1,71 +1,85 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
-import axios from 'axios';
+import React from "react";
+import {
+  BrowserRouter as Router,
+  Switch,
+  Route,
+  Link, RouteComponentProps
+} from "react-router-dom";
+import Test from "./Test";
+import SubmissionExplorer from "./SubmissionsExplorer";
 
-
-function processResponse(response: any) {
-  console.log(response);
-}
-
-type QuoteProps = {
-  quotes: string[]
-}
-type QuoteState = {
-  currentIndex: number,
-}
-class TestApp extends React.Component<QuoteProps, QuoteState> {
-
-  state: QuoteState = {
-    currentIndex: 0,
-  };
-
-  getIndex = (): number => {
-    const min: number = 0;
-    const max: number = this.props.quotes.length - 1;
-    return Math.floor(Math.random() * (max - min) + min);
-  };
-
-  getNextQuote = (): void => this.setState(({currentIndex: this.getIndex()}));
-
-  render() {
-    const quoteToDisplay = this.props.quotes[this.state.currentIndex];
-    return <div className="App">
-      <header className="App-header">
-        <h3>Render Component with State and Props using TypeScript</h3>
-      </header>
-      <div style={{height: "5vh", padding: "1em", margin: "7em"}}>
-        <h4>{quoteToDisplay}</h4>
-      </div>
-      <button onClick={this.getNextQuote}>NEXT QUOTE</button>
-    </div>
-  }
-}
-const randomQuotes: string[] = [
-    '123', '456', '789'
-]
-function App() {
-  axios.get('http://localhost:5000/test/123qwe').then(processResponse);
-
+export default function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <TestApp quotes={randomQuotes}/>
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+      <Router>
+        <div>
+          {/*<nav>*/}
+          {/*  <ul>*/}
+          {/*    <li>*/}
+          {/*      <Link to="/">Home</Link>*/}
+          {/*    </li>*/}
+          {/*    <li>*/}
+          {/*      <Link to="/about">About</Link>*/}
+          {/*    </li>*/}
+          {/*    <li>*/}
+          {/*      <Link to="/test/lk-1">LK-1</Link>*/}
+          {/*    </li>*/}
+          {/*  </ul>*/}
+          {/*</nav>*/}
+
+          {/* A <Switch> looks through its children <Route>s and
+            renders the first one that matches the current URL. */}
+          <Switch>
+            <Route path="/test/:id" component={TestRouter}/>
+            <Route path="/submissions/:id" component={SubmissionsRouter}/>
+            <Route path="/success" component={Success}/>
+            <Route path="/about">
+              <About />
+            </Route>
+            <Route path="/users">
+              <Users />
+            </Route>
+            <Route path="/">
+              <Home />
+            </Route>
+          </Switch>
+        </div>
+      </Router>
   );
 }
 
-export default App;
+type TParams = { id?: string };
+function TestRouter({ match }: RouteComponentProps<TParams>): JSX.Element {
+  return (<Test test_id={match.params.id || ''}/>)
+}
+function SubmissionsRouter({ match }: RouteComponentProps<TParams>): JSX.Element {
+  return (<SubmissionExplorer test_id={match.params.id || ''}/>)
+}
+
+function Home() {
+  const windowUrl = window.location.search;
+  const params = new URLSearchParams(windowUrl);
+
+  const test_id: string = params.get('test_id') || '';
+  if (test_id)
+    window.location.href = '/test/' + test_id;
+  return <h2>Home</h2>;
+}
+
+function About() {
+  return <h2>About</h2>;
+}
+
+function Users() {
+  return <h2>Users</h2>;
+}
+
+function Success() {
+  const windowUrl = window.location.search;
+  const params = new URLSearchParams(windowUrl);
+
+  const sid: string = params.get('sid') || '';
+  return <div>
+        <h3>Ваши результаты приняты, спасибо за отправку.</h3>
+        <p>Идентификатор отправки: {sid}</p>
+      </div>;
+}

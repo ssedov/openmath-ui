@@ -6,7 +6,9 @@ import './Test.css';
 
 type TestId = {
     test_id: string,
+    read_only?: boolean,
     data?: TestData,
+    callback?: (t: Test) => void,
 }
 
 type TestData = {
@@ -15,16 +17,28 @@ type TestData = {
     status?: string,
     submission_id?: string,
     uploads?: number,
+    submission?: any,
 }
 
 export default class Test extends React.Component<TestId, TestData> {
     state: TestData = {
-        questions: new Map<string, any>(),
+        questions: new Map<string, QuestionState>(),
     };
 
-    private answers: any = {};
-    private dataLoaded = false;
+    public answers: any = {};
     private uploads = 0;
+
+    public getAnswer(question_id: string) {
+        if (!this.state.submission)
+            return '';
+        return this.state.submission[question_id] || '';
+    }
+
+    public isAnswerSelected(question_id: string, index: number) {
+        console.log(this.state.submission);
+        const s = this.state.submission;
+        return s && s[question_id] && (s[question_id] === index || s[question_id][index]);
+    }
 
     public getQuestionData(questionId: string): QuestionState {
         const qs = this.state.questions.get(questionId);
@@ -33,26 +47,22 @@ export default class Test extends React.Component<TestId, TestData> {
         throw Error('question not found');
     }
 
-    public constructor(id: TestId) {
-        super(id);
-        if (id.data) {
-            this.state = id.data;
-            this.dataLoaded = true;
-        }
+    public setSubmission(data: any) {
+        this.setState(state => {
+            let newState = this.state;
+            newState.submission = data;
+            return newState;
+        });
     }
 
     public componentDidMount() {
-        this.loadData();
-    }
+        if (this.props.callback)
+            this.props.callback(this);
 
-    private loadData() {
-        if (this.dataLoaded)
-            return;
         if (!Config.API() || Config.API() === 'foo')
             return;
         axios.get(`${Config.API()}/test/${this.props.test_id}`).then(
             (req) => {
-                this.dataLoaded = true;
                 const newQuestions = new Map<string, any>();
                 for (let q_id in req.data.questions) {
                     const qq = req.data.questions[q_id];
@@ -112,12 +122,10 @@ export default class Test extends React.Component<TestId, TestData> {
         else if (q.type === 'multi') {
             this.answers[questionId] = this.answers[questionId] || {};
             this.answers[questionId][answerNumber.toString()] = !value;
-        }
-        else if (q.type === 'free' || q.type === 'text') {
+        } else if (q.type === 'free' || q.type === 'text') {
             value = (typeof value === 'string' ? value : '');
             this.answers[questionId] = value;
-        }
-        else if (q.type === 'file') {
+        } else if (q.type === 'file') {
             this.answers[questionId] = value;
         }
         console.log(this.answers);
@@ -125,11 +133,7 @@ export default class Test extends React.Component<TestId, TestData> {
 
     public render() {
         if (this.state.status === 'success') {
-            if (this.uploads === 0) return (
-                <div><h3>Ваши результаты приняты, спасибо за отправку.</h3>
-                    <p>Идентификатор отправки: {this.state.submission_id}</p>
-                </div>
-            );
+            if (this.uploads === 0) window.location.href = '/success?sid=' + this.state.submission_id;
             return (
                 <div><h3>Ваши результаты приняты, идёт загрузка файлов ({this.uploads}).</h3>
                     <p>Идентификатор отправки: {this.state.submission_id}</p>
@@ -147,12 +151,16 @@ export default class Test extends React.Component<TestId, TestData> {
         return (
             <div className='testWrapper'>
                 <div className='testTitle'><h2 className='testTitle'>{title}</h2></div>
-                <form onSubmit={() => {this.submitForm();}}>
+                <form onSubmit={() => {
+                    this.submitForm();
+                }}>
                     <ol>{listItems}</ol>
-                    { this.dataLoaded && (
-                    <div className='submit'>
-                        <input type='button' className='submitTest' value='Отправить' onClick={() => {this.submitForm();}}/>
-                    </div> ) }
+                    {this.state.questions.size > 0 && !this.props.read_only && (
+                        <div className='submit'>
+                            <input type='button' className='submitTest' value='Отправить' onClick={() => {
+                                this.submitForm();
+                            }}/>
+                        </div>)}
                 </form>
             </div>);
     }

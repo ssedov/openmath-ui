@@ -4,14 +4,11 @@ import './index.css';
 import reportWebVitals from './reportWebVitals';
 import Test from "./Test";
 
-const windowUrl = window.location.search;
-const params = new URLSearchParams(windowUrl);
-
-const test_id: string = params.get('test_id') || '';
+import App from "./App";
 
 ReactDOM.render(
     <React.StrictMode>
-        <Test test_id={test_id}/>
+        <App/>
     </React.StrictMode>,
     document.getElementById('root')
 );
