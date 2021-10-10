@@ -58,14 +58,21 @@ export default class Question extends React.Component<QuestionData, QuestionStat
                     />
                 </div>);
         } else if (this.state.type === 'file') {
-            const t = this.state.type || ''; // TS linting
-            answerBlock = (<div className='answerBlock'>
-                        <input type='file' className={t} name={this.props.question_id}
-                               id={this.props.question_id + 'i'}
-                               readOnly={this.props.parent.props.read_only}
-                               onInput={(e) =>
-                                   this.props.parent.handleAnswer(e.currentTarget.name, 0, e.currentTarget.files || '')}
-                        />
+            if (this.props.parent.props.read_only) {
+                if (this.props.parent.submission().files.length > 0) {
+                    let f = this.props.parent.submission().files[0].name;
+                    let n = this.props.parent.submission().submission_id;
+                    answerBlock = (<div className='answerBlock'><img src={`/uploads/${n}/${f}`}/></div>);
+                } else {
+                    answerBlock = <div className='answerBlock'/>
+                }
+            } else answerBlock = (<div className='answerBlock'>
+                <input type='file' className={this.state.type} name={this.props.question_id}
+                       id={this.props.question_id + 'i'}
+                       readOnly={this.props.parent.props.read_only}
+                       onInput={(e) =>
+                           this.props.parent.handleAnswer(e.currentTarget.name, 0, e.currentTarget.files || '')}
+                />
             </div>);
         }
         let image: JSX.Element | undefined;
