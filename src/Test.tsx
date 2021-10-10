@@ -9,6 +9,8 @@ type TestId = {
     read_only?: boolean,
     data?: TestData,
     callback?: (t: Test) => void,
+    submission?: any // submission to render
+    preloaded?: any // preloaded test data to render
 }
 
 type TestData = {
@@ -28,15 +30,22 @@ export default class Test extends React.Component<TestId, TestData> {
     public answers: any = {};
     private uploads = 0;
 
+    public submission() {
+        if (this.state.submission)
+            return this.state.submission;
+        if (this.props.submission)
+            return this.props.submission;
+        return undefined;
+    }
+
     public getAnswer(question_id: string) {
-        if (!this.state.submission)
+        if (!this.props.submission)
             return '';
-        return this.state.submission[question_id] || '';
+        return this.props.submission[question_id] || '';
     }
 
     public isAnswerSelected(question_id: string, index: number) {
-        console.log(this.state.submission);
-        const s = this.state.submission;
+        const s = this.submission();
         return s && s[question_id] && (s[question_id] === index || s[question_id][index]);
     }
 
@@ -47,31 +56,33 @@ export default class Test extends React.Component<TestId, TestData> {
         throw Error('question not found');
     }
 
-    public setSubmission(data: any) {
-        this.setState(state => {
-            let newState = this.state;
-            newState.submission = data;
-            return newState;
-        });
+    private populate(data: any) {
+        const newQuestions = new Map<string, any>();
+        for (let q_id in data.questions) {
+            const qq = data.questions[q_id];
+            const qid: string = qq.question_id;
+            newQuestions.set(qid, qq);
+        }
+        let title = data.title;
+
+        this.setState({title: title, questions: newQuestions})
+
     }
 
     public componentDidMount() {
         if (this.props.callback)
             this.props.callback(this);
 
+        if (this.props.preloaded) {
+            this.populate(this.props.preloaded);
+            return;
+        }
+
         if (!Config.API() || Config.API() === 'foo')
             return;
         axios.get(`${Config.API()}/test/${this.props.test_id}`).then(
             (req) => {
-                const newQuestions = new Map<string, any>();
-                for (let q_id in req.data.questions) {
-                    const qq = req.data.questions[q_id];
-                    const qid: string = qq.question_id;
-                    newQuestions.set(qid, qq);
-                }
-                let title = req.data.title;
-
-                this.setState(state => ({title: title, questions: newQuestions}))
+                this.populate(req.data);
             });
     }
 
